@@ -2,12 +2,17 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import Landing from "./pages/public/Landing";
 import AuthPage from "@/pages/public/Login";
+import ProfileSettings from "./pages/public/ProfileSettings";
 import Dashboard from "@/pages/member/Dashboard";
 import Books from "@/pages/member/Books";
 import Borrows from "./pages/member/Borrows";
 import AdminDashboard from "./pages/admin/Dashboard";
 import ManageBooks from "./pages/admin/ManageBooks";
 import ManageBorrows from "./pages/admin/ManageBorrows";
+import ViewMembers from "./pages/admin/ViewMembers";
+import SuperAdminDashboard from "./pages/superadmin/Dashboard";
+import ManageUsers from "./pages/superadmin/ManageUsers";
+import ReportsLogs from "./pages/superadmin/ReportsLogs";
 import Sidebar from "@/components/layout/Sidebar";
 import AnimatedPage from "@/components/layout/AnimatedPage";
 import ParticleBackground from "@/components/layout/ParticleBackground";
@@ -49,6 +54,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<AuthPage />} />
         
+        
 
         {/* Protected – all member pages go here */}
         <Route element={<ProtectedLayout />}>
@@ -58,6 +64,11 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/manage-books" element={<ManageBooks />} />
           <Route path="/manage-borrows" element={<ManageBorrows />} />
+          <Route path="/view-members" element={<ViewMembers />} />
+          <Route path="/superadmin" element={<SuperAdminDashboard />} />
+          <Route path="/manage-users" element={<ManageUsers />} />
+          <Route path="/reports" element={<ReportsLogs />} />
+          <Route path="/profile" element={<ProfileSettings />} />
           {/* Future pages just add here */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>

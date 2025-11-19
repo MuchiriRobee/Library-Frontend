@@ -1,5 +1,5 @@
 // src/pages/member/Borrows.tsx
-import { useAuth } from "@/context/AuthContext";
+//import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,7 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function Borrows() {
-  const { user } = useAuth();
+  
 
   return (
     <div className="p-6 lg:p-10">
@@ -81,7 +81,7 @@ export default function Borrows() {
               <History className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold rainbow-text-slow">
+              <h1 className="text-4xl font-bold text-emerald-600 dark:text-emerald-400 ">
                 My Borrow History
               </h1>
               <p className="text-lg text-muted-foreground mt-1">

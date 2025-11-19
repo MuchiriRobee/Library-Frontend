@@ -48,7 +48,7 @@ export default function Books() {
       >
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-4xl font-bold mb-4 rainbow-text-slow">
+          <h1 className="text-4xl font-bold mb-4 overview-text">
             Browse Books
           </h1>
           <div className="flex flex-col md:flex-row gap-4">

@@ -9,7 +9,6 @@ import { Card } from "@/components/ui/card";
 import { Search, History, Calendar, User, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-
 import BookCover from "@/assets/images/book.jpeg";
 
 const BOOK_COVER =BookCover;
@@ -86,7 +85,7 @@ export default function ManageBorrows() {
             Manage Borrow Records
           </h1>
           <p className="text-xl text-muted-foreground">
-            View and update all borrow records • Overdue auto-detected
+            View and update all borrow records 
           </p>
         </div>
 
@@ -140,11 +139,11 @@ export default function ManageBorrows() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{record.memberName}</p>
+                          <p className="font-medium"><User className="h-4 w-4" />{record.memberName}</p>
                           <p className="text-sm text-muted-foreground">{record.memberEmail}</p>
                         </div>
                       </TableCell>
-                      <TableCell className="font-semibold">{record.bookTitle}</TableCell>
+                      <TableCell className="font-semibold"><BookOpen className="h-4 w-4" />{record.bookTitle}</TableCell>
                       <TableCell className="text-sm">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4" />
@@ -162,8 +161,8 @@ export default function ManageBorrows() {
                           value={displayedStatus}
                           onValueChange={(value) => handleStatusChange(record.id, value as any)}
                         >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
+                          <SelectTrigger className="w-32 flex items-center gap-2">
+                            {getStatusBadge(displayedStatus)}
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Borrowed">Borrowed</SelectItem>

@@ -255,6 +255,59 @@
     animation: rainbow-flow 8s ease-in-out infinite;
   }
 
+    .bowrain-text {
+    background: linear-gradient(
+      90deg,
+      #ef4444,
+      #f97316,
+      #eab308,
+      #22c55e,
+      #3b82f6,
+      #6366f1,
+      #a855f7,
+      #ef4444
+    );
+    background-size: 200% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+    .overview-text {
+    background: linear-gradient(
+      90deg,
+      #3b82f6,
+      #6366f1,
+      #a855f7,
+      #ef4444,
+      #ef4444,
+      #f97316,
+      #eab308,
+      #22c55e
+
+    );
+    background-size: 70% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    }
+
+    .piechart-text{
+    background: linear-gradient(
+      90deg,
+      #ef4444,
+      #f97316,
+      #eab308,
+      #22c55e,
+      #3b82f6,
+      #6366f1,
+      #a855f7
+    );
+    background-size: 110% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    }
+    
   @keyframes rainbow-flow {
     0%   { background-position: 0% 50%; }
     50%  { background-position: 100% 50%; }

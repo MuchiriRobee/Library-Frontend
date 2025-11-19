@@ -2,7 +2,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { BookOpen, History, Users, Library, MessageCircle, Star } from "lucide-react";
+import { BookOpen, Library, MessageCircle, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 const mockReviews = [
@@ -49,8 +49,6 @@ export default function Dashboard() {
 
   const stats = [
     { title: "Total Books", value: "1,842", icon: Library, color: "from-emerald-500 to-teal-500" },
-    { title: "Borrowed Today", value: "24", icon: History, color: "from-blue-500 to-cyan-500" },
-    { title: "Active Members", value: "368", icon: Users, color: "from-purple-500 to-pink-500" },
     { title: "Available Now", value: "1,529", icon: BookOpen, color: "from-green-500 to-emerald-500" },
   ];
 
@@ -63,7 +61,7 @@ export default function Dashboard() {
       >
         {/* Welcome + Stats */}
         <div>
-          <h1 className="text-4xl font-bold mb-3 rainbow-text-slow">
+          <h1 className="text-4xl font-bold mb-3 overview-text">
             Welcome back, {user?.name.split(" ")[0]}!
           </h1>
           <p className="text-xl text-muted-foreground mb-8">
@@ -73,7 +71,7 @@ export default function Dashboard() {
             </span>
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             {stats.map((stat, i) => (
               <motion.div
                 key={stat.title}
