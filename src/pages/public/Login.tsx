@@ -164,6 +164,11 @@ export default function AuthPage() {
                       </FormItem>
                     )}
                   />
+                                    <div className="text-left space-y-3">
+                    <Link to="/forgot-password" className="text-sm text-emerald-600 hover:underline">
+                      Forgot your password?
+                    </Link>
+                  </div>
 <div className="mt-8 p-5 bg-muted/50 rounded-lg border border-border">
   <p className="text-sm font-semibold text-foreground mb-3">Demo Accounts (click to fill)</p>
   <div className="space-y-3 text-xs">
@@ -219,11 +224,7 @@ export default function AuthPage() {
                     )}
                   </Button>
 
-                  <div className="text-center space-y-3">
-                    <Link to="/forgot-password" className="text-sm text-emerald-600 hover:underline">
-                      Forgot your password?
-                    </Link>
-                  </div>
+
                 </form>
               </Form>
             </TabsContent>
