@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type {ReactNode} from "react";
 import api from "@/lib/api";
-import type { AuthState, LoginResponse } from "../types/index";
+import type { AuthState } from "../types/index";
 import { toast } from "sonner";
 
 interface AuthContextType extends AuthState {
