@@ -35,7 +35,7 @@ export default function ProfileSettings() {
   const { register, handleSubmit, formState: { errors } } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user?.name || "",
+      name: user?.username || "",
       email: user?.email || "",
       phone: "+254 712 345 678",
     }
