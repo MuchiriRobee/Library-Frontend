@@ -4,41 +4,137 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Users, History, AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
-import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/api";
+import { format, subMonths } from "date-fns";
+//import { toast } from "sonner";
 
-const borrowTrendData = [
-  { month: "Jan", borrowed: 145, returned: 120 },
-  { month: "Feb", borrowed: 168, returned: 152 },
-  { month: "Mar", borrowed: 182, returned: 160 },
-  { month: "Apr", borrowed: 195, returned: 178 },
-  { month: "May", borrowed: 210, returned: 195 },
-  { month: "Jun", borrowed: 228, returned: 210 },
-];
+interface Book {
+  book_id: number;
+  title: string;
+  author: string;
+  stock_quantity: number;
+  available_copies: number;
+}
 
-const pieData = [
-  { name: "Borrowed", value: 68, color: "#6d76f5ff" },
-  { name: "Returned", value: 195, color: "#34d399" },
-  { name: "Overdue", value: 18, color: "#ef4444" },
-];
+interface BorrowRecord {
+  borrow_id: number;
+  user_id: number;
+  member_name: string;
+  member_email: string;
+  book_id: number;
+  book_title: string;
+  book_author: string;
+  borrow_date: string;
+  due_date: string;
+  return_date: string | null;
+  status: "Borrowed" | "Returned" | "Overdue";
+}
 
-const allBorrowRecords = [
-  { id: 101, member: "Alex Johnson", book: "The Midnight Library", borrowed: "2025-03-10", due: "2025-03-24", status: "Borrowed" },
-  { id: 102, member: "Sarah Chen", book: "Atomic Habits", borrowed: "2025-03-08", due: "2025-03-22", status: "Borrowed" },
-  { id: 103, member: "James Torres", book: "Dune", borrowed: "2025-02-28", due: "2025-03-14", status: "Overdue" },
-  { id: 104, member: "Emma Williams", book: "Project Hail Mary", borrowed: "2025-03-01", due: "2025-03-15", status: "Returned" },
-  { id: 105, member: "Michael Brown", book: "Klara and the Sun", borrowed: "2025-02-20", due: "2025-03-06", status: "Returned" },
-];
+interface MonthlyStat {
+  month: string;
+  borrowed: number;
+  returned: number;
+}
 
 export default function AdminDashboard() {
   const { user } = useAuth();
 
+  // Fetch all books
+  const { data: books = [] } = useQuery<Book[]>({
+    queryKey: ["admin-books"],
+    queryFn: async () => {
+      const res = await api.get("/books");
+      return res.data.data;
+    },
+  });
+
+  // Fetch all borrow records
+  const { data: allBorrows = [], isLoading: borrowsLoading } = useQuery<BorrowRecord[]>({
+    queryKey: ["admin-all-borrows"],
+    queryFn: async () => {
+      const res = await api.get("/borrow");
+      return res.data.data;
+    },
+  });
+
+  // Fetch total members (you can add /api/users/count if needed, fallback to mock if not)
+  const totalMembers = 5284; // Replace with real endpoint later
+
+  // Compute real-time stats
+  const totalBooks = books.length;
+  const currentlyBorrowed = allBorrows.filter((b) => b.status === "Borrowed").length;
+  const overdueCount = allBorrows.filter((b) => {
+    if (b.status === "Returned") return false;
+    return new Date(b.due_date) < new Date();
+  }).length;
+
+  const returnedThisMonth = allBorrows.filter((b) => {
+    if (!b.return_date) return false;
+    const returnDate = new Date(b.return_date);
+    const now = new Date();
+    return (
+      returnDate.getMonth() === now.getMonth() &&
+      returnDate.getFullYear() === now.getFullYear()
+    );
+  }).length;
+
+  // Monthly borrow/return trend (last 6 months)
+  const monthlyStats: MonthlyStat[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const date = subMonths(new Date(), i);
+    const monthKey = format(date, "MMM");
+
+    const borrowedInMonth = allBorrows.filter((b) => {
+      const d = new Date(b.borrow_date);
+      return d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear();
+    }).length;
+
+    const returnedInMonth = allBorrows.filter((b) => {
+      if (!b.return_date) return false;
+      const d = new Date(b.return_date);
+      return d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear();
+    }).length;
+
+    monthlyStats.push({
+      month: monthKey,
+      borrowed: borrowedInMonth,
+      returned: returnedInMonth,
+    });
+  }
+
+  // Pie chart data
+  const pieData = [
+    { name: "Borrowed", value: currentlyBorrowed, color: "#6d76f5ff" },
+    { name: "Returned", value: returnedThisMonth, color: "#34d399" },
+    { name: "Overdue", value: overdueCount, color: "#ef4444" },
+  ];
+
+  // Recent borrow records (latest 10)
+  const recentBorrows = [...allBorrows]
+    .sort((a, b) => new Date(b.borrow_date).getTime() - new Date(a.borrow_date).getTime())
+    .slice(0, 10);
+
   const stats = [
-    { title: "Total Books", value: "1,842", icon: BookOpen, color: "from-emerald-500 to-teal-500" },
-    { title: "Currently Borrowed", value: "68", icon: History, color: "from-blue-500 to-cyan-500" },
-    { title: "Returned This Month", value: "195", icon: CheckCircle2, color: "from-green-500 to-emerald-500" },
-    { title: "Overdue Books", value: "18", icon: AlertCircle, color: "from-red-500 to-rose-500" },
-    { title: "Total Members", value: "5,284", icon: Users, color: "from-purple-500 to-pink-500" },
+    { title: "Total Books", value: totalBooks.toLocaleString(), icon: BookOpen, color: "from-emerald-500 to-teal-500" },
+    { title: "Currently Borrowed", value: currentlyBorrowed.toString(), icon: History, color: "from-blue-500 to-cyan-500" },
+    { title: "Returned This Month", value: returnedThisMonth.toString(), icon: CheckCircle2, color: "from-green-500 to-emerald-500" },
+    { title: "Overdue Books", value: overdueCount.toString(), icon: AlertCircle, color: "from-red-500 to-rose-500" },
+    { title: "Total Members", value: totalMembers.toLocaleString(), icon: Users, color: "from-purple-500 to-pink-500" },
     { title: "Growth This Month", value: "+12%", icon: TrendingUp, color: "from-orange-500 to-red-500" },
   ];
 
@@ -55,7 +151,7 @@ export default function AdminDashboard() {
             Admin Dashboard
           </h1>
           <p className="text-xl text-muted-foreground">
-            Welcome back, <span className="font-bold text-emerald-600">{user?.name}</span> • Managing the entire library
+            Welcome back, <span className="font-bold text-emerald-600">{user?.username}</span> • Managing the entire library
           </p>
         </div>
 
@@ -90,18 +186,32 @@ export default function AdminDashboard() {
           {/* Line Chart */}
           <Card className="hover:shadow-xl transition-shadow">
             <CardHeader>
-              <CardTitle className="text-2xl">Borrow & Return Trend (2025)</CardTitle>
+              <CardTitle className="text-2xl">Borrow & Return Trend (Last 6 Months)</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={borrowTrendData}>
+                <LineChart data={monthlyStats}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                   <XAxis dataKey="month" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
                   <Tooltip contentStyle={{ backgroundColor: "#1f2937", border: "none", borderRadius: "8px" }} />
                   <Legend />
-                  <Line type="monotone" dataKey="borrowed" stroke="#eb5915ff" strokeWidth={3} dot={{ fill: "#10b981" }} />
-                  <Line type="monotone" dataKey="returned" stroke="#34d399" strokeWidth={3} dot={{ fill: "#34d399" }} />
+                  <Line
+                    type="monotone"
+                    dataKey="borrowed"
+                    stroke="#eb5915ff"
+                    strokeWidth={3}
+                    dot={{ fill: "#10b981" }}
+                    name="Borrowed"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="returned"
+                    stroke="#34d399"
+                    strokeWidth={3}
+                    dot={{ fill: "#34d399" }}
+                    name="Returned"
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -146,38 +256,49 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* All Borrow Records Table */}
+        {/* Recent Borrow Activity Table */}
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Recent Borrow Activity (All Members)</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead>Book Title</TableHead>
-                  <TableHead>Borrowed</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {allBorrowRecords.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell className="font-medium">{record.member}</TableCell>
-                    <TableCell>{record.book}</TableCell>
-                    <TableCell>{record.borrowed}</TableCell>
-                    <TableCell>{record.due}</TableCell>
-                    <TableCell>
-                      {record.status === "Borrowed" && <Badge className="bg-blue-500">Borrowed</Badge>}
-                      {record.status === "Returned" && <Badge className="bg-emerald-500">Returned</Badge>}
-                      {record.status === "Overdue" && <Badge variant="destructive">Overdue</Badge>}
-                    </TableCell>
+            {borrowsLoading ? (
+              <div className="text-center py-12 text-muted-foreground">Loading borrow records...</div>
+            ) : recentBorrows.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">No borrow records yet</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Member</TableHead>
+                    <TableHead>Book Title</TableHead>
+                    <TableHead>Borrowed</TableHead>
+                    <TableHead>Due Date</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {recentBorrows.map((record) => {
+                    const isOverdue = record.status !== "Returned" && new Date(record.due_date) < new Date();
+                    const status = record.status === "Returned" ? "Returned" : isOverdue ? "Overdue" : "Borrowed";
+
+                    return (
+                      <TableRow key={record.borrow_id}>
+                        <TableCell className="font-medium">{record.member_name}</TableCell>
+                        <TableCell>{record.book_title}</TableCell>
+                        <TableCell>{format(new Date(record.borrow_date), "yyyy-MM-dd")}</TableCell>
+                        <TableCell>{format(new Date(record.due_date), "yyyy-MM-dd")}</TableCell>
+                        <TableCell>
+                          {status === "Borrowed" && <Badge className="bg-blue-500">Borrowed</Badge>}
+                          {status === "Returned" && <Badge className="bg-emerald-500">Returned</Badge>}
+                          {status === "Overdue" && <Badge variant="destructive">Overdue</Badge>}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </motion.div>

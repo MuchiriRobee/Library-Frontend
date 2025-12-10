@@ -1,15 +1,12 @@
 // src/pages/public/Login.tsx
 import { useState } from "react";
-import axios from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-//import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-//import {  CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, Library, LogIn, UserPlus, Eye, EyeOff, ArrowLeft } from "lucide-react";
@@ -17,18 +14,13 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api", // Change if your backend port differs
-  withCredentials: true, // Important if you use httpOnly cookies
-});
-
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  username: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
@@ -42,9 +34,14 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");
-  const [showPassword, setShowPassword] = useState({ login: false, register: false, confirm: false });
+  const [showPassword, setShowPassword] = useState({
+    login: false,
+    register: false,
+    confirm: false,
+  });
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+
+  const { login, signup } = useAuth();
   const navigate = useNavigate();
 
   const loginForm = useForm<LoginForm>({
@@ -54,40 +51,58 @@ export default function AuthPage() {
 
   const registerForm = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: { username: "", email: "", password: "", confirmPassword: "" },
   });
 
+  // REAL BACKEND LOGIN
   const onLogin = async (data: LoginForm) => {
     setIsLoading(true);
     try {
-      await login(data.email , data.password);
-      
-      setTimeout(() => navigate("/dashboard"), 800);
+      await login(data.email, data.password);
+
+      // Auto redirect based on role
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.role === "Admin") {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
-      // Error toast already in context
+      // Error already shown in AuthContext
     } finally {
       setIsLoading(false);
     }
   };
 
+  // REAL BACKEND SIGNUP
   const onRegister = async (data: RegisterForm) => {
     setIsLoading(true);
     try {
-      // Replace with your actual register endpoint
-      await api.post("/auth/register", data);
-      toast.success("Account created! Please log in.");
+      await signup(data.username, data.email, data.password);
+      toast.success("Account created successfully! Please sign in.");
       setActiveTab("login");
       registerForm.reset();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Registration failed");
+      // Error already handled in AuthContext
     } finally {
       setIsLoading(false);
     }
   };
 
   const togglePassword = (field: "login" | "register" | "confirm") => {
-    setShowPassword(prev => ({ ...prev, [field]: !prev[field] }));
+    setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
   };
+
+  // Demo fill helpers (keep your beautiful UI!)
+ {/*} const fillDemo = (email: string, password: string) => {
+    loginForm.setValue("email", email);
+    loginForm.setValue("password", password);
+  };*/}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-gray-950 dark:via-black dark:to-emerald-950 px-4 py-12">
@@ -102,9 +117,7 @@ export default function AuthPage() {
           <div className="p-5 bg-emerald-100 dark:bg-emerald-900/50 rounded-full shadow-xl backdrop-blur-sm">
             <Library className="h-14 w-14 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <h1 className="mt-6 text-4xl font-bold rainbow-text">
-            Library Portal
-          </h1>
+          <h1 className="mt-6 text-4xl font-bold rainbow-text">Library Portal</h1>
           <p className="text-muted-foreground mt-2">Manage your reading journey with elegance</p>
         </div>
 
@@ -164,51 +177,40 @@ export default function AuthPage() {
                       </FormItem>
                     )}
                   />
-                                    <div className="text-left space-y-3">
-                    <Link to="/forgot-password" className="text-sm text-emerald-600 hover:underline">
-                      Forgot your password?
-                    </Link>
-                  </div>
-<div className="mt-8 p-5 bg-muted/50 rounded-lg border border-border">
-  <p className="text-sm font-semibold text-foreground mb-3">Demo Accounts (click to fill)</p>
-  <div className="space-y-3 text-xs">
-    <button
-      type="button"
-      onClick={() => {
-        loginForm.setValue("email", "member@library.com");
-        loginForm.setValue("password", "123456");
-      }}
-      className="block w-full text-left p-3 rounded-md bg-background/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-all border border-border"
-    >
-      Member → member@library.com / 123456
-    </button>
 
-    <button
-      type="button"
-      onClick={() => {
-        loginForm.setValue("email", "admin@library.com");
-        loginForm.setValue("password", "admin123");
-      }}
-      className="block w-full text-left p-3 rounded-md bg-background/80 hover:bg-orange-50 dark:hover:bg-orange-950/50 transition-all border border-border"
-    >
-      Admin → admin@library.com / admin123
-    </button>
+                  {/* DEMO ACCOUNTS — Still beautiful & functional
+                  <div className="mt-8 p-5 bg-muted/50 rounded-lg border border-border">
+                    <p className="text-sm font-semibold text-foreground mb-3">Demo Accounts (click to fill)</p>
+                    <div className="space-y-3 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => fillDemo("member@library.com", "123456")}
+                        className="block w-full text-left p-3 rounded-md bg-background/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-all border border-border"
+                      >
+                        Member → member@library.com / 123456
+                      </button>
 
-    <button
-      type="button"
-      onClick={() => {
-        loginForm.setValue("email", "super@library.com");
-        loginForm.setValue("password", "super123");
-      }}
-      className="block w-full text-left p-3 rounded-md bg-background/80 hover:bg-purple-50 dark:hover:bg-purple-950/50 transition-all border border-border"
-    >
-      Super Admin → super@library.com / super123
-    </button>
-  </div>
-  <p className="text-xs text-muted-foreground mt-3 italic">
-    These will auto-fill the form — just click and press Sign In
-  </p>
-</div>
+                      <button
+                        type="button"
+                        onClick={() => fillDemo("admin@library.com", "admin123")}
+                        className="block w-full text-left p-3 rounded-md bg-background/80 hover:bg-orange-50 dark:hover:bg-orange-950/50 transition-all border border-border"
+                      >
+                        Admin → admin@library.com / admin123
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => fillDemo("super@library.com", "super123")}
+                        className="block w-full text-left p-3 rounded-md bg-background/80 hover:bg-purple-50 dark:hover:bg-purple-950/50 transition-all border border-border"
+                      >
+                        SuperAdmin → super@library.com / super123
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-3 italic">
+                      These will auto-fill the form — just click and press Sign In
+                    </p>
+                  </div> */}
+
                   <Button
                     type="submit"
                     className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg"
@@ -223,8 +225,6 @@ export default function AuthPage() {
                       "Sign In"
                     )}
                   </Button>
-
-
                 </form>
               </Form>
             </TabsContent>
@@ -235,7 +235,7 @@ export default function AuthPage() {
                 <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-5">
                   <FormField
                     control={registerForm.control}
-                    name="name"
+                    name="username"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Full Name</FormLabel>

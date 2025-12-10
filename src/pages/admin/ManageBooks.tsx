@@ -1,5 +1,4 @@
-// src/pages/admin/ManageBooks.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,7 +14,7 @@ import { Search, Plus, Edit, Trash2, Filter } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import BookCover from "@/assets/images/book.jpeg";
-
+import api from "@/lib/api"; // Adjust path to api.ts
 
 const BOOK_COVER = BookCover;
 
@@ -29,24 +28,19 @@ const bookSchema = z.object({
 
 type BookForm = z.infer<typeof bookSchema>;
 
-const mockBooks = [
-  { id: 1, title: "The Midnight Library", author: "Matt Haig", genre: "Fiction", isbn: "978-0525559481", available: true },
-  { id: 2, title: "Atomic Habits", author: "James Clear", genre: "Self-Help", isbn: "978-0735211299", available: false },
-  { id: 3, title: "Dune", author: "Frank Herbert", genre: "Sci-Fi", isbn: "978-0441013593", available: true },
-  { id: 4, title: "Project Hail Mary", author: "Andy Weir", genre: "Sci-Fi", isbn: "978-0593135204", available: true },
-  { id: 5, title: "Klara and the Sun", author: "Kazuo Ishiguro", genre: "Fiction", isbn: "978-0593318171", available: true },
-];
+type Category = { category_id: number; name: string };
 
 export default function ManageBooks() {
-  const [books, setBooks] = useState(mockBooks);
+  const [books, setBooks] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState("");
   const [genreFilter, setGenreFilter] = useState("all");
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [editingBook, setEditingBook] = useState<typeof mockBooks[0] | null>(null);
+  const [editingBook, setEditingBook] = useState<any | null>(null);
 
   const form = useForm<BookForm>({
     resolver: zodResolver(bookSchema),
-    defaultValues: editingBook || {
+    defaultValues: {
       title: "",
       author: "",
       genre: "",
@@ -55,48 +49,118 @@ export default function ManageBooks() {
     },
   });
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [booksRes, catsRes] = await Promise.all([
+          api.get("/books"),
+          api.get("/categories"),
+        ]);
+const fetchedBooks = booksRes.data.data.map((book: any) => ({
+  id: book.book_id,
+  title: book.title,
+  author: book.author,
+  genre: book.genre || "Uncategorized",
+  isbn: "N/A", // or add column later
+  description: "No description available yet.", // or add column
+  available: book.available_copies > 0,
+}));
+        setBooks(fetchedBooks);
+        setCategories(catsRes.data.data);
+      } catch (err) {
+        toast.error("Failed to load data");
+        console.error(err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (editingBook) {
+      form.reset({
+        title: editingBook.title,
+        author: editingBook.author,
+        genre: editingBook.genre,
+        isbn: editingBook.isbn,
+        description: editingBook.description,
+      });
+    }
+  }, [editingBook, form]);
+
   const filteredBooks = books.filter(book => {
     const matchesSearch = book.title.toLowerCase().includes(search.toLowerCase()) ||
-                         book.author.toLowerCase().includes(search.toLowerCase());
+                          book.author.toLowerCase().includes(search.toLowerCase());
     const matchesGenre = genreFilter === "all" || book.genre === genreFilter;
     return matchesSearch && matchesGenre;
   });
 
-  const onSubmit = (data: BookForm) => {
-    if (editingBook) {
-      setBooks(prev => prev.map(b => b.id === editingBook.id ? { ...b, ...data } : b));
-      toast.success(`"${data.title}" updated successfully`);
-    } else {
-      const newBook = {
-        id: Math.max(...books.map(b => b.id)) + 1,
-        ...data,
-        available: true,
-      };
-      setBooks(prev => [...prev, newBook]);
-      toast.success(`"${data.title}" added to library`);
+  const refetchBooks = async () => {
+    try {
+      const res = await api.get("/books");
+      const updatedBooks = res.data.data.map((book: any) => ({
+        id: book.book_id,
+        title: book.title,
+        author: book.author,
+        genre: book.genre || "Uncategorized",
+        isbn: book.isbn,
+        description: book.description,
+        available: book.available_copies > 0,
+      }));
+      setBooks(updatedBooks);
+    } catch (err) {
+      toast.error("Failed to refresh books");
     }
-    setIsAddOpen(false);
-    setEditingBook(null);
-    form.reset();
   };
 
-  const handleDelete = (id: number) => {
-    const book = books.find(b => b.id === id);
-    setBooks(prev => prev.filter(b => b.id !== id));
-    toast.success(`"${book?.title}" removed from library`);
+  const onSubmit = async (data: BookForm) => {
+    const category = categories.find((cat) => cat.name === data.genre);
+    if (!category) {
+      toast.error("Invalid genre selected");
+      return;
+    }
+    const payload = {
+      title: data.title,
+      author: data.author,
+      category_id: category.category_id,
+      isbn: data.isbn,
+      description: data.description,
+      ...( !editingBook && { stock_quantity: 1 } ), // Default for new books
+    };
+    try {
+      if (editingBook) {
+        await api.put(`/books/${editingBook.id}`, payload);
+        toast.success(`"${data.title}" updated successfully`);
+      } else {
+        await api.post("/books", payload);
+        toast.success(`"${data.title}" added to library`);
+      }
+      setIsAddOpen(false);
+      setEditingBook(null);
+      form.reset();
+      refetchBooks();
+    } catch (err) {
+      toast.error("Operation failed");
+      console.error(err);
+    }
   };
 
-  const handleEdit = (book: typeof mockBooks[0]) => {
+  const handleDelete = async (id: number) => {
+    try {
+      await api.delete(`/books/${id}`);
+      toast.success("Book removed from library");
+      refetchBooks();
+    } catch (err) {
+      toast.error("Delete failed – may have active borrows");
+      console.error(err);
+    }
+  };
+
+  const handleEdit = (book: any) => {
     setEditingBook(book);
-    form.reset({
-      title: book.title,
-      author: book.author,
-      genre: book.genre,
-      isbn: book.isbn,
-      description: "A captivating story about choices and alternate realities.",
-    });
     setIsAddOpen(true);
   };
+
+  const genres = categories.map((cat) => cat.name);
 
   return (
     <div className="p-6 lg:p-10">
@@ -178,11 +242,11 @@ export default function ManageBooks() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Fiction">Fiction</SelectItem>
-                              <SelectItem value="Sci-Fi">Sci-Fi</SelectItem>
-                              <SelectItem value="Self-Help">Self-Help</SelectItem>
-                              <SelectItem value="Finance">Finance</SelectItem>
-                              <SelectItem value="Romance">Romance</SelectItem>
+                              {genres.map((g) => (
+                                <SelectItem key={g} value={g}>
+                                  {g}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -255,10 +319,11 @@ export default function ManageBooks() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Genres</SelectItem>
-                <SelectItem value="Fiction">Fiction</SelectItem>
-                <SelectItem value="Sci-Fi">Sci-Fi</SelectItem>
-                <SelectItem value="Self-Help">Self-Help</SelectItem>
-                <SelectItem value="Finance">Finance</SelectItem>
+                {genres.map((g) => (
+                  <SelectItem key={g} value={g}>
+                    {g}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

@@ -1,95 +1,92 @@
 // src/context/AuthContext.tsx
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect} from "react";
 import type {ReactNode} from "react";
 import api from "@/lib/api";
-import type { AuthState } from "../types/index";
 import { toast } from "sonner";
 
-interface AuthContextType extends AuthState {
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  role: "Admin" | "Member";
+  token: string;
+}
+
+interface AuthContextType {
+  user: User | null;
   login: (email: string, password: string) => Promise<void>;
+  signup: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    token: null,
-    isLoading: true,
-  });
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Check token on app load
   useEffect(() => {
-    const loadUser = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setState({ user: null, token: null, isLoading: false });
-        return;
-      }
-
-      try {
-        const res = await api.get("/auth/me"); // Your backend should have this endpoint
-        setState({ user: res.data, token, isLoading: false });
-      } catch (err) {
-        localStorage.removeItem("token");
-        setState({ user: null, token: null, isLoading: false });
-      }
-    };
-    loadUser();
+    const token = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("user");
+    if (token && savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
-  // MOCK LOGIN – works instantly for demo
-  const mockUsers = {
-    "member@library.com": { id: 1, email: "member@library.com", name: "Alex Johnson", role: "Member" as const },
-    "admin@library.com": { id: 2, email: "admin@library.com", name: "Sarah Admin", role: "Admin" as const },
-    "super@library.com": { id: 3, email: "super@library.com", name: "David Super", role: "SuperAdmin" as const },
-  };
+const login = async (email: string, password: string) => {
+  try {
+    const res = await api.post("/users/login", { email, password });
 
-  // Simulate small delay
-  await new Promise(resolve => setTimeout(resolve, 800));
+    if (res.data.success) {
+      const { token, user } = res.data.data;
 
-  const user = mockUsers[email as keyof typeof mockUsers];
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
 
-  if (user && (password === "123456" || password === "admin123" || password === "super123")) {
-    const fakeToken = "mock-jwt-token-" + Date.now();
-    localStorage.setItem("token", fakeToken);
-    setState({ user, token: fakeToken, isLoading: false });
-    toast.success(`Welcome back, ${user.name.split(" ")[0]}!`, {
-      description: `Logged in as ${user.role}`,
-    });
-  } else {
-    toast.error("Invalid email or password", {
-      description: "Use one of the demo accounts below",
-    });
-    throw new Error("Invalid credentials");
+      setUser({ ...user, token });
+      toast.success(`Welcome back, ${user.username}!`);
+    } else {
+      toast.error(res.data.message || "Login failed");
+    }
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || "Invalid email or password");
   }
 };
-  {/*const login = async (email: string, password: string) => {
-    try {
-      const res = await api.post<LoginResponse>("/auth/login", { email, password });
-      localStorage.setItem("token", res.data.token);
-      setState({ user: res.data.user, token: res.data.token, isLoading: false });
-      toast.success(`Welcome back, ${res.data.user.name}!`);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Login failed");
-      throw err;
+
+const signup = async (username: string, email: string, password: string) => {
+  try {
+    const res = await api.post("/users/register", {
+      username,
+      email,
+      password,
+      role: "Member", // Your backend allows this
+    });
+
+    if (res.data.success) {
+      toast.success("Account created! Please log in.");
+    } else {
+      toast.error(res.data.message || "Registration failed");
     }
-  };*/}
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || "Email already exists");
+  }
+};
 
   const logout = () => {
     localStorage.removeItem("token");
-    setState({ user: null, token: null, isLoading: false });
+    localStorage.removeItem("user");
+    setUser(null);
     toast.info("Logged out successfully");
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
