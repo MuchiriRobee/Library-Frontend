@@ -22,8 +22,7 @@ const bookSchema = z.object({
   title: z.string().min(2, "Title is required"),
   author: z.string().min(2, "Author is required"),
   genre: z.string().min(1, "Select a genre"),
-  isbn: z.string().min(10, "Valid ISBN required"),
-  description: z.string().min(10, "Description too short"),
+
 });
 
 type BookForm = z.infer<typeof bookSchema>;
@@ -44,8 +43,7 @@ export default function ManageBooks() {
       title: "",
       author: "",
       genre: "",
-      isbn: "",
-      description: "",
+
     },
   });
 
@@ -61,8 +59,7 @@ const fetchedBooks = booksRes.data.data.map((book: any) => ({
   title: book.title,
   author: book.author,
   genre: book.genre || "Uncategorized",
-  isbn: "N/A", // or add column later
-  description: "No description available yet.", // or add column
+
   available: book.available_copies > 0,
 }));
         setBooks(fetchedBooks);
@@ -81,8 +78,7 @@ const fetchedBooks = booksRes.data.data.map((book: any) => ({
         title: editingBook.title,
         author: editingBook.author,
         genre: editingBook.genre,
-        isbn: editingBook.isbn,
-        description: editingBook.description,
+
       });
     }
   }, [editingBook, form]);
@@ -102,8 +98,6 @@ const fetchedBooks = booksRes.data.data.map((book: any) => ({
         title: book.title,
         author: book.author,
         genre: book.genre || "Uncategorized",
-        isbn: book.isbn,
-        description: book.description,
         available: book.available_copies > 0,
       }));
       setBooks(updatedBooks);
@@ -122,8 +116,7 @@ const fetchedBooks = booksRes.data.data.map((book: any) => ({
       title: data.title,
       author: data.author,
       category_id: category.category_id,
-      isbn: data.isbn,
-      description: data.description,
+
       ...( !editingBook && { stock_quantity: 1 } ), // Default for new books
     };
     try {
@@ -253,7 +246,7 @@ const fetchedBooks = booksRes.data.data.map((book: any) => ({
                         </FormItem>
                       )}
                     />
-                    <FormField
+                  {/*  <FormField
                       control={form.control}
                       name="isbn"
                       render={({ field }) => (
@@ -265,10 +258,10 @@ const fetchedBooks = booksRes.data.data.map((book: any) => ({
                           <FormMessage />
                         </FormItem>
                       )}
-                    />
+                    />*/}
                   </div>
 
-                  <FormField
+                 {/* <FormField
                     control={form.control}
                     name="description"
                     render={({ field }) => (
@@ -284,7 +277,7 @@ const fetchedBooks = booksRes.data.data.map((book: any) => ({
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  />*/}
 
                   <div className="flex justify-end gap-4">
                     <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
