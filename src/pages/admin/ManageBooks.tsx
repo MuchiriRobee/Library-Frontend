@@ -14,7 +14,7 @@ import { Search, Plus, Edit, Trash2, Filter } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import BookCover from "@/assets/images/book.jpeg";
-import api from "@/lib/api"; // Adjust path to api.ts
+import api from "@/lib/api";
 
 const BOOK_COVER = BookCover;
 
@@ -22,7 +22,8 @@ const bookSchema = z.object({
   title: z.string().min(2, "Title is required"),
   author: z.string().min(2, "Author is required"),
   genre: z.string().min(1, "Select a genre"),
-
+  isbn: z.string().min(10, "Valid ISBN required"),
+  description: z.string().min(10, "Description too short"),
 });
 
 type BookForm = z.infer<typeof bookSchema>;
@@ -35,6 +36,7 @@ export default function ManageBooks() {
   const [search, setSearch] = useState("");
   const [genreFilter, setGenreFilter] = useState("all");
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<any | null>(null);
 
   const form = useForm<BookForm>({
@@ -43,8 +45,17 @@ export default function ManageBooks() {
       title: "",
       author: "",
       genre: "",
-
+      isbn: "",
+      description: "",
     },
+  });
+
+  // New category form
+  const categoryForm = useForm<{
+    name: string;
+    description?: string;
+  }>({
+    defaultValues: { name: "", description: "" },
   });
 
   useEffect(() => {
@@ -54,19 +65,20 @@ export default function ManageBooks() {
           api.get("/books"),
           api.get("/categories"),
         ]);
-const fetchedBooks = booksRes.data.data.map((book: any) => ({
-  id: book.book_id,
-  title: book.title,
-  author: book.author,
-  genre: book.genre || "Uncategorized",
 
-  available: book.available_copies > 0,
-}));
+        const fetchedBooks = booksRes.data.data.map((book: any) => ({
+          id: book.book_id,
+          title: book.title,
+          author: book.author,
+          genre: book.genre || "Uncategorized",
+          isbn: "N/A",
+          description: "No description available yet.",
+          available: book.available_copies > 0,
+        }));
         setBooks(fetchedBooks);
         setCategories(catsRes.data.data);
       } catch (err) {
         toast.error("Failed to load data");
-        console.error(err);
       }
     };
     fetchData();
@@ -78,7 +90,8 @@ const fetchedBooks = booksRes.data.data.map((book: any) => ({
         title: editingBook.title,
         author: editingBook.author,
         genre: editingBook.genre,
-
+        isbn: editingBook.isbn,
+        description: editingBook.description,
       });
     }
   }, [editingBook, form]);
@@ -98,11 +111,22 @@ const fetchedBooks = booksRes.data.data.map((book: any) => ({
         title: book.title,
         author: book.author,
         genre: book.genre || "Uncategorized",
+        isbn: book.isbn,
+        description: book.description,
         available: book.available_copies > 0,
       }));
       setBooks(updatedBooks);
     } catch (err) {
       toast.error("Failed to refresh books");
+    }
+  };
+
+  const refetchCategories = async () => {
+    try {
+      const res = await api.get("/categories");
+      setCategories(res.data.data);
+    } catch (err) {
+      toast.error("Failed to refresh categories");
     }
   };
 
@@ -116,8 +140,9 @@ const fetchedBooks = booksRes.data.data.map((book: any) => ({
       title: data.title,
       author: data.author,
       category_id: category.category_id,
-
-      ...( !editingBook && { stock_quantity: 1 } ), // Default for new books
+      isbn: data.isbn,
+      description: data.description,
+      ...(!editingBook && { stock_quantity: 1 }),
     };
     try {
       if (editingBook) {
@@ -134,6 +159,21 @@ const fetchedBooks = booksRes.data.data.map((book: any) => ({
     } catch (err) {
       toast.error("Operation failed");
       console.error(err);
+    }
+  };
+
+  const handleAddCategory = async (data: { name: string; description?: string }) => {
+    try {
+      await api.post("/categories", {
+        name: data.name.trim(),
+        description: data.description?.trim(),
+      });
+      toast.success(`Category "${data.name}" created!`);
+      categoryForm.reset();
+      setIsAddCategoryOpen(false);
+      refetchCategories(); // Refresh genre list
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to create category");
     }
   };
 
@@ -171,126 +211,183 @@ const fetchedBooks = booksRes.data.data.map((book: any) => ({
             <p className="text-muted-foreground mt-2">Add, edit, or remove books from the library collection</p>
           </div>
 
-          <Dialog open={isAddOpen} onOpenChange={(open) => {
-            setIsAddOpen(open);
-            if (!open) {
-              setEditingBook(null);
-              form.reset();
-            }
-          }}>
-            <DialogTrigger asChild>
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
-                <Plus className="mr-2 h-5 w-5" />
-                Add New Book
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="text-2xl">
-                  {editingBook ? "Edit Book" : "Add New Book"}
-                </DialogTitle>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
+          {/* Buttons */}
+          <div className="flex gap-3">
+            {/* Add Category Button */}
+            <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-emerald-600 hover:bg-emerald-700">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Add Category
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl">Add New Category</DialogTitle>
+                </DialogHeader>
+                <Form {...categoryForm}>
+                  <form onSubmit={categoryForm.handleSubmit(handleAddCategory)} className="space-y-5">
                     <FormField
-                      control={form.control}
-                      name="title"
+                      control={categoryForm.control}
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Title</FormLabel>
+                          <FormLabel>Category Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter book title" {...field} />
+                            <Input placeholder="e.g., Mystery, Romance, Sci-Fi..." {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                     <FormField
-                      control={form.control}
-                      name="author"
+                      control={categoryForm.control}
+                      name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Author</FormLabel>
+                          <FormLabel>Description (optional)</FormLabel>
                           <FormControl>
-                            <Input placeholder="Author name" {...field} />
+                            <Input placeholder="Brief description..." {...field} />
                           </FormControl>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
+                    <div className="flex justify-end gap-3 pt-4">
+                      <Button type="button" variant="outline" onClick={() => setIsAddCategoryOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
+                        Create Category
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="genre"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Genre</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+            {/* Add Book Button */}
+            <Dialog open={isAddOpen} onOpenChange={(open) => {
+              setIsAddOpen(open);
+              if (!open) {
+                setEditingBook(null);
+                form.reset();
+              }
+            }}>
+              <DialogTrigger asChild>
+                <Button className="bg-emerald-600 hover:bg-emerald-700">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Add New Book
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl">
+                    {editingBook ? "Edit Book" : "Add New Book"}
+                  </DialogTitle>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Title</FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select genre" />
-                              </SelectTrigger>
+                              <Input placeholder="Enter book title" {...field} />
                             </FormControl>
-                            <SelectContent>
-                              {genres.map((g) => (
-                                <SelectItem key={g} value={g}>
-                                  {g}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  {/*  <FormField
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="author"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Author</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Author name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                     
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="genre"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Genre</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select genre" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {genres.map((g) => (
+                                  <SelectItem key={g} value={g}>
+                                    {g}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="isbn"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>ISBN</FormLabel>
+                            <FormControl>
+                              <Input placeholder="978-3-16-148410-0" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
                       control={form.control}
-                      name="isbn"
+                      name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>ISBN</FormLabel>
+                          <FormLabel>Description</FormLabel>
                           <FormControl>
-                            <Input placeholder="978-3-16-148410-0" {...field} />
+                            <textarea
+                              className="w-full min-h-32 px-4 py-3 rounded-lg border border-input bg-background focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                              placeholder="Brief description of the book..."
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
-                    />*/}
-                  </div>
+                    />
 
-                 {/* <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <textarea
-                            className="w-full min-h-32 px-4 py-3 rounded-lg border border-input bg-background focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
-                            placeholder="Brief description of the book..."
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />*/}
-
-                  <div className="flex justify-end gap-4">
-                    <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
-                      {editingBook ? "Update Book" : "Add Book"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+                    <div className="flex justify-end gap-4">
+                      <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
+                        {editingBook ? "Update Book" : "Add Book"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Search & Filter */}
