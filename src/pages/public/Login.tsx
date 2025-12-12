@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Loader2, Library, LogIn, UserPlus, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+//import { toast } from "sonner";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -79,30 +79,28 @@ export default function AuthPage() {
     }
   };
 
-  // REAL BACKEND SIGNUP
-  const onRegister = async (data: RegisterForm) => {
-    setIsLoading(true);
-    try {
-      await signup(data.username, data.email, data.password);
-      toast.success("Account created successfully! Please sign in.");
+const onRegister = async (data: RegisterForm) => {
+  setIsLoading(true);
+  try {
+    const result = await signup(data.username, data.email, data.password);
+
+    // Only switch tab and reset form if registration was successful
+    if (result.success) {
       setActiveTab("login");
       registerForm.reset();
-    } catch (err: any) {
-      // Error already handled in AuthContext
-    } finally {
-      setIsLoading(false);
     }
-  };
+    // No toast here — already handled inside signup()
+  } catch (err) {
+    // Errors are already toasted in signup(), no need to do anything
+    console.error("Signup error:", err);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const togglePassword = (field: "login" | "register" | "confirm") => {
     setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
   };
-
-  // Demo fill helpers (keep your beautiful UI!)
- {/*} const fillDemo = (email: string, password: string) => {
-    loginForm.setValue("email", email);
-    loginForm.setValue("password", password);
-  };*/}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-gray-950 dark:via-black dark:to-emerald-950 px-4 py-12">
@@ -124,10 +122,10 @@ export default function AuthPage() {
         <Card className="border-0 shadow-2xl backdrop-blur-xl bg-white/95 dark:bg-black/95 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 h-14 rounded-t-lg bg-muted/50">
-              <TabsTrigger value="login" className="text-lg font-semibold data-[state=active]:bg-background">
-                <LogIn className="mr-2 h-5 w-5" /> Sign In
+              <TabsTrigger value="login" data-cy="tab-login" className="text-lg font-semibold data-[state=active]:bg-background">
+                <LogIn className="mr-2 h-5 w-5" /> Log In
               </TabsTrigger>
-              <TabsTrigger value="register" className="text-lg font-semibold data-[state=active]:bg-background">
+              <TabsTrigger value="register" data-cy="tab-register" className="text-lg font-semibold data-[state=active]:bg-background">
                 <UserPlus className="mr-2 h-5 w-5" /> Register
               </TabsTrigger>
             </TabsList>
@@ -143,7 +141,7 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="member@library.com" type="email" className="h-12" {...field} />
+                          <Input  data-cy="login-email" placeholder="member@library.com" type="email" className="h-12" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -159,6 +157,7 @@ export default function AuthPage() {
                         <FormControl>
                           <div className="relative">
                             <Input
+                              data-cy="login-password"
                               type={showPassword.login ? "text" : "password"}
                               placeholder="••••••••"
                               className="h-12 pr-12"
@@ -212,6 +211,7 @@ export default function AuthPage() {
                   </div> */}
 
                   <Button
+                    data-cy="login-submit"
                     type="submit"
                     className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg"
                     disabled={isLoading}
@@ -318,6 +318,7 @@ export default function AuthPage() {
                   />
 
                   <Button
+                    data-cy="register-submit"
                     type="submit"
                     className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-lg"
                     disabled={isLoading}

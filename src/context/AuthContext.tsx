@@ -11,16 +11,21 @@ interface User {
   role: "Admin" | "Member";
   token: string;
 }
+interface SignupResult {
+  success: boolean;
+  message?: string; // Optional: for error details if needed
+}
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (username: string, email: string, password: string) => Promise<void>;
+  signup: (username: string, email: string, password: string) => Promise<SignupResult>; // ← Changed
   logout: () => void;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -55,22 +60,26 @@ const login = async (email: string, password: string) => {
   }
 };
 
-const signup = async (username: string, email: string, password: string) => {
+const signup = async (username: string, email: string, password: string): Promise<SignupResult> => {
   try {
     const res = await api.post("/users/register", {
       username,
       email,
       password,
-      role: "Member", // Your backend allows this
+      role: "Member",
     });
 
     if (res.data.success) {
-      toast.success("Account created! Please log in.");
+      toast.success("Account created successfully! Please sign in.");
+      return { success: true };
     } else {
       toast.error(res.data.message || "Registration failed");
+      return { success: false };
     }
   } catch (err: any) {
-    toast.error(err.response?.data?.message || "Email already exists");
+    const message = err.response?.data?.message || "Email already exists";
+    toast.error(message);
+    return { success: false };
   }
 };
 
