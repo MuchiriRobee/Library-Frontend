@@ -6,9 +6,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { History, Calendar, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import BookCover from "@/assets/images/book.jpeg";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+//import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { toast } from "sonner";
+//import { toast } from "sonner";
 import { format } from "date-fns";
 
 // Define proper type from backend response
@@ -39,7 +40,7 @@ const getStatusBadge = (status: string) => {
 
 export default function Borrows() {
   //const { user } = useAuth();
-  const queryClient = useQueryClient();
+  //const queryClient = useQueryClient();
 
   const { data: borrows = [], isLoading } = useQuery<BorrowRecord[]>({
     queryKey: ["my-borrows"],
@@ -57,18 +58,7 @@ export default function Borrows() {
     },
   });
 
-  const returnMutation = useMutation({
-    mutationFn: async (borrowId: number) => {
-      await api.patch(`/borrow/return/${borrowId}`);
-    },
-    onSuccess: () => {
-      toast.success("Book returned successfully!");
-      queryClient.invalidateQueries({ queryKey: ["my-borrows"] });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to return book");
-    },
-  });
+
 
   const getDisplayedStatus = (borrow: BorrowRecord): "Borrowed" | "Returned" | "Overdue" => {
     if (borrow.status === "Returned") return "Returned";
@@ -124,7 +114,6 @@ export default function Borrows() {
                     <TableHead>Borrowed</TableHead>
                     <TableHead>Due Date</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -160,18 +149,7 @@ export default function Borrows() {
                         <TableCell>
                           {getStatusBadge(displayedStatus)}
                         </TableCell>
-                        <TableCell>
-                          {displayedStatus !== "Returned" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={returnMutation.isPending}
-                              onClick={() => returnMutation.mutate(borrow.id)}
-                            >
-                              {returnMutation.isPending ? "Returning..." : "Return Book"}
-                            </Button>
-                          )}
-                        </TableCell>
+
                       </TableRow>
                     );
                   })}

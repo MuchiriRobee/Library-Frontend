@@ -9,7 +9,7 @@ export default function ParticleBackground() {
       {[...Array(12)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute text-4xl opacity-5"
+          className="absolute text-4xl opacity-20"
           initial={{
             x: Math.random() * window.innerWidth,
             y: -100,

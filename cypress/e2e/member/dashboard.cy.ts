@@ -11,8 +11,8 @@ describe('Member Dashboard and Sidebar Navigation', () => {
     cy.get('input[type="password"]').type(memberCreds.password);
     cy.contains('Sign In').click();
     cy.url().should('include', '/dashboard');
-    cy.viewport(1280,720);
-
+    cy.viewport(1280,720);  
+    
     // Clear any storage if needed, but usually not
     // localStorage.clear();
   });
@@ -74,7 +74,7 @@ describe('Member Dashboard and Sidebar Navigation', () => {
     cy.contains('Theme & Appearance').should('be.visible');
     cy.contains('Date Format').should('be.visible');
 
-  
+    
   });
 
   it('should logout from sidebar and redirect to login', () => {

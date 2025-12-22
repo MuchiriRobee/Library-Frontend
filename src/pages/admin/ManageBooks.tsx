@@ -22,8 +22,8 @@ const bookSchema = z.object({
   title: z.string().min(2, "Title is required"),
   author: z.string().min(2, "Author is required"),
   genre: z.string().min(1, "Select a genre"),
-  isbn: z.string().min(10, "Valid ISBN required"),
-  description: z.string().min(10, "Description too short"),
+  publication_year: z.number().int().min(1000).max(new Date().getFullYear()).optional(),
+  stock_quantity: z.number().int().min(0, "Stock must be non-negative"),
 });
 
 type BookForm = z.infer<typeof bookSchema>;
@@ -45,8 +45,8 @@ export default function ManageBooks() {
       title: "",
       author: "",
       genre: "",
-      isbn: "",
-      description: "",
+      publication_year: undefined,
+      stock_quantity: 1,
     },
   });
 
@@ -71,8 +71,8 @@ export default function ManageBooks() {
           title: book.title,
           author: book.author,
           genre: book.genre || "Uncategorized",
-          isbn: "N/A",
-          description: "No description available yet.",
+          publication_year: book.publication_year,
+          stock_quantity: book.stock_quantity,
           available: book.available_copies > 0,
         }));
         setBooks(fetchedBooks);
@@ -90,8 +90,8 @@ export default function ManageBooks() {
         title: editingBook.title,
         author: editingBook.author,
         genre: editingBook.genre,
-        isbn: editingBook.isbn,
-        description: editingBook.description,
+        publication_year: editingBook.publication_year,
+        stock_quantity: editingBook.stock_quantity,
       });
     }
   }, [editingBook, form]);
@@ -111,8 +111,8 @@ export default function ManageBooks() {
         title: book.title,
         author: book.author,
         genre: book.genre || "Uncategorized",
-        isbn: book.isbn,
-        description: book.description,
+        publication_year: book.publication_year,
+        stock_quantity: book.stock_quantity,
         available: book.available_copies > 0,
       }));
       setBooks(updatedBooks);
@@ -140,9 +140,8 @@ export default function ManageBooks() {
       title: data.title,
       author: data.author,
       category_id: category.category_id,
-      isbn: data.isbn,
-      description: data.description,
-      ...(!editingBook && { stock_quantity: 1 }),
+      publication_year: data.publication_year,
+      stock_quantity: data.stock_quantity,
     };
     try {
       if (editingBook) {
@@ -226,15 +225,15 @@ export default function ManageBooks() {
                   <DialogTitle className="text-2xl">Add New Category</DialogTitle>
                 </DialogHeader>
                 <Form {...categoryForm}>
-                  <form onSubmit={categoryForm.handleSubmit(handleAddCategory)} className="space-y-5">
+                  <form onSubmit={categoryForm.handleSubmit(handleAddCategory)} className="space-y-6">
                     <FormField
                       control={categoryForm.control}
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Category Name</FormLabel>
+                          <FormLabel>Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., Mystery, Romance, Sci-Fi..." {...field} />
+                            <Input placeholder="e.g., Fiction" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -249,10 +248,11 @@ export default function ManageBooks() {
                           <FormControl>
                             <Input placeholder="Brief description..." {...field} />
                           </FormControl>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <div className="flex justify-end gap-3 pt-4">
+                    <div className="flex justify-end gap-4">
                       <Button type="button" variant="outline" onClick={() => setIsAddCategoryOpen(false)}>
                         Cancel
                       </Button>
@@ -266,20 +266,14 @@ export default function ManageBooks() {
             </Dialog>
 
             {/* Add Book Button */}
-            <Dialog open={isAddOpen} onOpenChange={(open) => {
-              setIsAddOpen(open);
-              if (!open) {
-                setEditingBook(null);
-                form.reset();
-              }
-            }}>
+            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-emerald-600 hover:bg-emerald-700">
                   <Plus className="mr-2 h-5 w-5" />
-                  Add New Book
+                  Add Book
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle className="text-2xl">
                     {editingBook ? "Edit Book" : "Add New Book"}
@@ -313,7 +307,6 @@ export default function ManageBooks() {
                             <FormMessage />
                           </FormItem>
                         )}
-                     
                       />
                     </div>
 
@@ -342,38 +335,47 @@ export default function ManageBooks() {
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name="isbn"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>ISBN</FormLabel>
-                            <FormControl>
-                              <Input placeholder="978-3-16-148410-0" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+<FormField
+  control={form.control}
+  name="publication_year"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Publication Year</FormLabel>
+      <FormControl>
+        <Input 
+          type="number" 
+          placeholder="e.g., 2023" 
+          {...field} 
+          value={field.value ?? ""} 
+          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
                     </div>
 
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <textarea
-                              className="w-full min-h-32 px-4 py-3 rounded-lg border border-input bg-background focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
-                              placeholder="Brief description of the book..."
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+<FormField
+  control={form.control}
+  name="stock_quantity"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Stock Quantity</FormLabel>
+      <FormControl>
+        <Input 
+          type="number" 
+          min="0" 
+          placeholder="Number of copies" 
+          {...field} 
+          onChange={(e) => field.onChange(Number(e.target.value))}
+          value={field.value}
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
 
                     <div className="flex justify-end gap-4">
                       <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
@@ -429,7 +431,7 @@ export default function ManageBooks() {
                   <TableHead>Title</TableHead>
                   <TableHead>Author</TableHead>
                   <TableHead>Genre</TableHead>
-                  <TableHead>ISBN</TableHead>
+                  <TableHead>Publication Year</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -445,7 +447,7 @@ export default function ManageBooks() {
                     <TableCell>
                       <Badge variant="outline">{book.genre}</Badge>
                     </TableCell>
-                    <TableCell className="font-mono text-sm">{book.isbn}</TableCell>
+                    <TableCell className="font-mono text-sm">{book.publication_year || 'N/A'}</TableCell>
                     <TableCell>
                       <Badge className={book.available ? "bg-emerald-500" : "bg-gray-500"}>
                         {book.available ? "Available" : "Borrowed"}
