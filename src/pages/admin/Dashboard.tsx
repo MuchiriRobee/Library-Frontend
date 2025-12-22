@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Users, History, AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
+import { BookOpen, Users, History, AlertCircle, CheckCircle2 } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -72,8 +72,21 @@ export default function AdminDashboard() {
     },
   });
 
-  // Fetch total members (you can add /api/users/count if needed, fallback to mock if not)
-  const totalMembers = 5284; // Replace with real endpoint later
+ // Fetch actual total number of members (users)
+const { data: membersCount = 0, isError, error } = useQuery<number>({
+  queryKey: ["total-members"],
+  queryFn: async () => {
+    const res = await api.get("/users/count");
+    return res.data.count;
+  },
+});
+
+// Add this for debugging
+{isError && (
+  <div className="text-red-500 text-sm">
+    Failed to load member count: {(error as any)?.response?.data?.message || error?.message}
+  </div>
+)}
 
   // Compute real-time stats
   const totalBooks = books.length;
@@ -134,8 +147,7 @@ export default function AdminDashboard() {
     { title: "Currently Borrowed", value: currentlyBorrowed.toString(), icon: History, color: "from-blue-500 to-cyan-500" },
     { title: "Returned This Month", value: returnedThisMonth.toString(), icon: CheckCircle2, color: "from-green-500 to-emerald-500" },
     { title: "Overdue Books", value: overdueCount.toString(), icon: AlertCircle, color: "from-red-500 to-rose-500" },
-    { title: "Total Members", value: totalMembers.toLocaleString(), icon: Users, color: "from-purple-500 to-pink-500" },
-    { title: "Growth This Month", value: "+12%", icon: TrendingUp, color: "from-orange-500 to-red-500" },
+    { title: "Total Members", value: membersCount.toLocaleString(), icon: Users, color: "from-purple-500 to-pink-500" },
   ];
 
   return (
