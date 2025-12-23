@@ -24,7 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Home, BookOpen, History, Users, Settings, LogOut, Menu, Library,
-  Moon, Sun, Calendar
+  Moon, Sun
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -49,7 +49,6 @@ export default function Sidebar() {
   const { theme, setTheme } = useTheme();
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [dateFormat, setDateFormat] = useState("PPP");
 
   // Safe navigation items — defaults to empty if no user
   const items = user?.role && navItems[user.role] ? navItems[user.role] : [];
@@ -105,9 +104,6 @@ export default function Sidebar() {
               <DropdownMenuLabel>Preferences</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
                 <Sun className="mr-2 h-4 w-4" /> Theme & Appearance
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-                <Calendar className="mr-2 h-4 w-4" /> Date Format
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -187,24 +183,6 @@ export default function Sidebar() {
                   <SelectItem value="light">Light</SelectItem>
                   <SelectItem value="dark">Dark</SelectItem>
                   <SelectItem value="system">System</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Date Format */}
-            <div className="space-y-3">
-              <Label className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Date Format
-              </Label>
-              <Select value={dateFormat} onValueChange={setDateFormat}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PPP">Aug 15, 2025</SelectItem>
-                  <SelectItem value="PPPP">Thursday, Aug 15th, 2025</SelectItem>
-                  <SelectItem value="yyyy-MM-dd">2025-08-15</SelectItem>
                 </SelectContent>
               </Select>
             </div>
