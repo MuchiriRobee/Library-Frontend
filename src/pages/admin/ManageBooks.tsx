@@ -98,7 +98,7 @@ export default function ManageBooks() {
 
   const filteredBooks = books.filter(book => {
     const matchesSearch = book.title.toLowerCase().includes(search.toLowerCase()) ||
-                          book.author.toLowerCase().includes(search.toLowerCase());
+      book.author.toLowerCase().includes(search.toLowerCase());
     const matchesGenre = genreFilter === "all" || book.genre === genreFilter;
     return matchesSearch && matchesGenre;
   });
@@ -335,47 +335,47 @@ export default function ManageBooks() {
                           </FormItem>
                         )}
                       />
-<FormField
-  control={form.control}
-  name="publication_year"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Publication Year</FormLabel>
-      <FormControl>
-        <Input 
-          type="number" 
-          placeholder="e.g., 2023" 
-          {...field} 
-          value={field.value ?? ""} 
-          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-        />
-      </FormControl>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
+                      <FormField
+                        control={form.control}
+                        name="publication_year"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Publication Year</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="e.g., 2023"
+                                {...field}
+                                value={field.value ?? ""}
+                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
 
-<FormField
-  control={form.control}
-  name="stock_quantity"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Stock Quantity</FormLabel>
-      <FormControl>
-        <Input 
-          type="number" 
-          min="0" 
-          placeholder="Number of copies" 
-          {...field} 
-          onChange={(e) => field.onChange(Number(e.target.value))}
-          value={field.value}
-        />
-      </FormControl>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
+                    <FormField
+                      control={form.control}
+                      name="stock_quantity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Stock Quantity</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder="Number of copies"
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                              value={field.value}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <div className="flex justify-end gap-4">
                       <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
@@ -432,8 +432,9 @@ export default function ManageBooks() {
                   <TableHead>Author</TableHead>
                   <TableHead>Genre</TableHead>
                   <TableHead>Publication Year</TableHead>
+                  <TableHead>Stock Qty</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -448,6 +449,9 @@ export default function ManageBooks() {
                       <Badge variant="outline">{book.genre}</Badge>
                     </TableCell>
                     <TableCell className="font-mono text-sm">{book.publication_year || 'N/A'}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {book.stock_quantity}
+                    </TableCell>
                     <TableCell>
                       <Badge className={book.available ? "bg-emerald-500" : "bg-gray-500"}>
                         {book.available ? "Available" : "Borrowed"}
