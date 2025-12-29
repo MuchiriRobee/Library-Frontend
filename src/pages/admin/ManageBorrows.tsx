@@ -29,6 +29,7 @@ export default function ManageBorrows() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "Borrowed" | "Returned" | "Overdue">("all");
   const queryClient = useQueryClient();
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const { data: borrows = [], isLoading } = useQuery<BorrowRecord[]>({
     queryKey: ["all-borrows"],
@@ -82,11 +83,36 @@ export default function ManageBorrows() {
   };
 
   const handleSoftDelete = (id: number) => {
-  queryClient.setQueryData<BorrowRecord[]>(["all-borrows"], (old) =>
-    old ? old.filter((record) => record.id !== id) : old
-  );
-  toast.success("Record removed from view");
-};
+    queryClient.setQueryData<BorrowRecord[]>(["all-borrows"], (old) =>
+      old ? old.filter((record) => record.id !== id) : old
+    );
+    toast.success("Record removed from view");
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredBorrows.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredBorrows.map((r) => r.id));
+    }
+  };
+
+  const handleBulkSoftDelete = () => {
+    if (selectedIds.length === 0) return;
+
+    queryClient.setQueryData<BorrowRecord[]>(["all-borrows"], (old) =>
+      old ? old.filter((record) => !selectedIds.includes(record.id)) : old
+    );
+
+    toast.success(`${selectedIds.length} record(s) removed from view`);
+    setSelectedIds([]);
+  };
 
   const filteredBorrows = useMemo(() => {
     return borrows.filter((record) => {
@@ -113,6 +139,15 @@ export default function ManageBorrows() {
             <h1 className="text-4xl font-bold rainbow-text-slow">Manage Borrows</h1>
             <p className="text-muted-foreground mt-2">Oversee all borrow records and update statuses</p>
           </div>
+          {selectedIds.length > 0 && (
+            <Button
+              variant="destructive"
+              onClick={handleBulkSoftDelete}
+            >
+              Delete Selected ({selectedIds.length})
+            </Button>
+          )}
+
           <Button variant="outline">Export Report</Button>
         </div>
 
@@ -153,13 +188,23 @@ export default function ManageBorrows() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>
+                      <input
+                        type="checkbox"
+                        checked={
+                          filteredBorrows.length > 0 &&
+                          selectedIds.length === filteredBorrows.length
+                        }
+                        onChange={toggleSelectAll}
+                      />
+                    </TableHead>
                     <TableHead>Cover</TableHead>
                     <TableHead>Member</TableHead>
                     <TableHead>Book</TableHead>
                     <TableHead>Borrowed</TableHead>
                     <TableHead>Due</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -167,6 +212,14 @@ export default function ManageBorrows() {
                     const displayedStatus = getDisplayedStatus(record);
                     return (
                       <TableRow key={record.id} className="h-24">
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(record.id)}
+                            onChange={() => toggleSelect(record.id)}
+                          />
+                        </TableCell>
+
                         <TableCell>
                           <img src={BOOK_COVER} alt={record.bookTitle} className="w-14 h-20 object-cover rounded shadow" />
                         </TableCell>
@@ -210,7 +263,7 @@ export default function ManageBorrows() {
                             </SelectContent>
                           </Select>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-center">
                           {displayedStatus === "Returned" && (
                             <Button
                               variant="ghost"
