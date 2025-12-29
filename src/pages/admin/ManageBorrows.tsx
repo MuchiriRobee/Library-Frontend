@@ -55,13 +55,7 @@ export default function ManageBorrows() {
     onError: () => toast.error("Failed to update"),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => api.delete(`/borrow/${id}`),
-    onSuccess: () => {
-      toast.success("Record deleted");
-      queryClient.invalidateQueries({ queryKey: ["all-borrows"] });
-    },
-  });
+
 
   const getDisplayedStatus = (record: BorrowRecord): "Borrowed" | "Returned" | "Overdue" => {
     if (record.status === "Returned") return "Returned";
@@ -86,6 +80,13 @@ export default function ManageBorrows() {
     }
     // Overdue/Borrowed are display-only
   };
+
+  const handleSoftDelete = (id: number) => {
+  queryClient.setQueryData<BorrowRecord[]>(["all-borrows"], (old) =>
+    old ? old.filter((record) => record.id !== id) : old
+  );
+  toast.success("Record removed from view");
+};
 
   const filteredBorrows = useMemo(() => {
     return borrows.filter((record) => {
@@ -215,7 +216,7 @@ export default function ManageBorrows() {
                               variant="ghost"
                               size="sm"
                               className="text-red-600 hover:text-red-700"
-                              onClick={() => deleteMutation.mutate(record.id)}
+                              onClick={() => handleSoftDelete(record.id)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
