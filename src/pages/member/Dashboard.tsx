@@ -1,7 +1,3 @@
-// src/pages/member/Dashboard.tsx
-// Note: Updated mapping to use user_name and book_title from enriched comments
-// No other changes needed; styling maintained
-
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -10,8 +6,9 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
-// Types from your backend
+
 interface Book {
   book_id: number;
   title: string;
@@ -201,9 +198,13 @@ export default function Dashboard() {
         </div>
 
         <div className="text-center py-8">
-          <p className="text-lg text-muted-foreground">
-            Explore the library — your next favorite book is waiting
-          </p>
+<p className="text-lg text-muted-foreground">
+  <Link
+    to="/books"
+    className="text-primary font-semibold underline underline-offset-4 hover:scale-105 inline-block transition-transform hover:text-emerald-600 dark">
+    Explore the library — your next favorite book is waiting
+  </Link>
+</p>
         </div>
       </motion.div>
     </div>
