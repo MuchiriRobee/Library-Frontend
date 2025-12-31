@@ -283,7 +283,7 @@ export default function Landing() {
                 variants={childVariants}
                 className="text-5xl font-bold text-center mb-16 rainbow-text-slow"
               >
-                About Library Hub
+                About Maktaba Hub
               </motion.h2>
 
               <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -297,7 +297,7 @@ export default function Landing() {
 
                 <motion.div variants={childVariants} className="space-y-6">
                   <p className="text-xl text-muted-foreground leading-relaxed">
-                    Library Hub is more than just a place for books – it's a vibrant community center dedicated to fostering lifelong learning and creativity.
+                    Maktaba Hub is more than just a place for books, it's a vibrant community center dedicated to fostering lifelong learning and creativity.
                   </p>
                   <p className="text-xl text-muted-foreground leading-relaxed">
                     Founded in 2025, we blend traditional library services with modern technology, offering digital borrowing, interactive workshops, and cozy reading spaces.
@@ -305,7 +305,7 @@ export default function Landing() {
                   <ul className="space-y-4">
                     <li className="flex items-center gap-3 text-lg">
                       <Book className="h-6 w-6 text-emerald-600" />
-                      Over 10,000 physical and digital titles
+                      Over 1,000 physical and digital titles
                     </li>
                     <li className="flex items-center gap-3 text-lg">
                       <Users className="h-6 w-6 text-emerald-600" />
@@ -547,7 +547,7 @@ export default function Landing() {
             <motion.div variants={childVariants}>
               <div className="flex items-center gap-3 mb-6">
                 <Library className="h-10 w-10 text-white" />
-                <h3 className="text-3xl font-bold">Library Hub</h3>
+                <h3 className="text-3xl font-bold">Maktaba Hub</h3>
               </div>
               <p className="text-gray-300 leading-relaxed">
                 Your gateway to knowledge, imagination, and lifelong learning.
@@ -579,7 +579,7 @@ export default function Landing() {
                       href="mailto:library@gmail.com" 
                       className="text-white hover:text-emerald-200 font-medium underline-offset-4 hover:underline transition-all duration-200"
                     >
-                      library@gmail.com
+                      maktaba@gmail.com
                     </a>
                   </span>
                 </div>
@@ -593,7 +593,7 @@ export default function Landing() {
                 </Link>
               </Button>
               <p className="text-gray-500 mt-8 text-sm">
-                © 2025 Library Hub. All rights reserved.
+                © 2025 Maktaba Hub. All rights reserved.
               </p>
             </motion.div>
           </motion.div>
