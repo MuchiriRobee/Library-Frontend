@@ -56,7 +56,7 @@ const slides = [
   {
     image: "/images/library1.webp",
     placeholder: "/images/library1-low.webp", // tiny blurred version
-    title: "Welcome to Library Hub",
+    title: "Welcome to Maktaba Hub",
     description: "Your gateway to knowledge, imagination, and community.",
   },
   {
