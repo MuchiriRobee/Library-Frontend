@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom
 import Landing from "./pages/public/Landing";
 import AuthPage from "@/pages/public/Login";
 import ProfileSettings from "./pages/public/ProfileSettings";
+import About from "./pages/public/About";
 import Dashboard from "@/pages/member/Dashboard";
 import Books from "@/pages/member/Books";
 import Borrows from "./pages/member/Borrows";
@@ -53,6 +54,7 @@ function App() {
         {/* Public */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<AuthPage />} />
+        <Route path="/about" element={<About />} />
         
         
 

@@ -317,7 +317,7 @@ export default function Landing() {
                     </li>
                   </ul>
                   <Button asChild className="mt-6">
-                    <Link to="/login">Visit Us</Link>
+                    <Link to="/about">About Us</Link>
                   </Button>
                 </motion.div>
               </div>
