@@ -531,7 +531,7 @@ export default function About() {
                       </Link>
                     </Button>
                     <p className="text-gray-500 mt-8 text-sm">
-                      © 2025 Maktaba Hub. All rights reserved.
+                      © 2026 Maktaba Hub. All rights reserved.
                     </p>
                   </motion.div>
                 </motion.div>
