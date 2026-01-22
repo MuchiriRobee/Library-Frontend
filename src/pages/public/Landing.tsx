@@ -140,13 +140,13 @@ export default function Landing() {
   // Carousel state
   const [currentSlide, setCurrentSlide] = useState(0);
 
-    useEffect(() => {
-  // Preload all carousel images
-  slides.forEach((slide) => {
-    const img = new Image();
-    img.src = slide.image;
-  });
-}, []); // Run once on mount
+  useEffect(() => {
+    // Preload all carousel images
+    slides.forEach((slide) => {
+      const img = new Image();
+      img.src = slide.image;
+    });
+  }, []); // Run once on mount
 
   // Auto-advance carousel every 10 seconds
   useEffect(() => {
@@ -191,7 +191,8 @@ export default function Landing() {
               exit="exit"
               transition={{ duration: 1.2, ease: "easeInOut" }}
               className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `                
+              style={{
+                backgroundImage: `                
                 url(${slides[currentSlide].image})
               ` }}
             />
@@ -199,7 +200,7 @@ export default function Landing() {
 
           {/* Dark Overlay */}
           <div className="absolute inset-0 bg-black/50" />
-         <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
 
           {/* Content */}
           <div className="relative z-10 max-w-7xl mx-auto text-center">
@@ -258,9 +259,8 @@ export default function Landing() {
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
-                className={`w-10 h-1 rounded-full transition-all duration-300 ${
-                  index === currentSlide ? "bg-white w-16" : "bg-white/50"
-                }`}
+                className={`w-10 h-1 rounded-full transition-all duration-300 ${index === currentSlide ? "bg-white w-16" : "bg-white/50"
+                  }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
@@ -291,8 +291,11 @@ export default function Landing() {
                   <img
                     src="/images/library-interior.jpg"
                     alt="Library Interior"
-                    className="rounded-2xl shadow-2xl w-full h-[400px] object-cover"
+                    className="rounded-2xl shadow-2xl w-full h-[400px] object-cover
+             transition-all duration-500 ease-in-out
+             hover:scale-105 hover:-translate-y-2"
                   />
+
                 </motion.div>
 
                 <motion.div variants={childVariants} className="space-y-6">
@@ -325,7 +328,7 @@ export default function Landing() {
           </div>
         </section>
 
-{/* Expanded Features Section */}
+        {/* Expanded Features Section */}
         <section
           ref={featuresRef}
           className="py-32 px-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950 dark:to-teal-950"
@@ -463,7 +466,7 @@ export default function Landing() {
           </div>
         </section>
 
-{/* Testimonials Section */}
+        {/* Testimonials Section */}
         <section
           ref={testimonialsRef}
           className="py-32 px-6 bg-white/50 dark:bg-black/50 backdrop-blur-sm"
@@ -502,11 +505,10 @@ export default function Landing() {
                             {[...Array(5)].map((_, idx) => (
                               <Star
                                 key={idx}
-                                className={`h-5 w-5 ${
-                                  idx < t.rating
+                                className={`h-5 w-5 ${idx < t.rating
                                     ? "fill-yellow-400 text-yellow-400"
                                     : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
-                                }`}
+                                  }`}
                               />
                             ))}
                           </div>
@@ -532,7 +534,7 @@ export default function Landing() {
           </div>
         </section>
 
-{/* CTA + Footer */}
+        {/* CTA + Footer */}
         <footer
           ref={ctaRef}
           className="bg-gradient-to-br from-emerald-900 to-teal-900 text-white py-16 px-6"
@@ -575,8 +577,8 @@ export default function Landing() {
                 <div className="flex items-center gap-3">
                   <Mail className="h-5 w-5" />
                   <span>
-                    <a 
-                      href="mailto:library@gmail.com" 
+                    <a
+                      href="mailto:library@gmail.com"
                       className="text-white hover:text-emerald-200 font-medium underline-offset-4 hover:underline transition-all duration-200"
                     >
                       maktaba@gmail.com
