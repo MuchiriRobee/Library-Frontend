@@ -412,7 +412,7 @@ export default function About() {
             </div>
           </motion.div>
                 <Button asChild size="lg" className="h-14 px-8 mt-25 font-bold text-lg bg-white text-emerald-600 hover:bg-white/90">
-                  <Link to="/login">
+                  <Link to="/">
                     Back To Home <ArrowLeft className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
