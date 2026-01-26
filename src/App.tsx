@@ -4,6 +4,9 @@ import Landing from "./pages/public/Landing";
 import AuthPage from "@/pages/public/Login";
 import ProfileSettings from "./pages/public/ProfileSettings";
 import About from "./pages/public/About";
+import VerifyEmail from "./pages/public/VerifyEmail";
+import ForgotPassword from "./pages/public/ForgotPassword";
+import ResetPassword from "./pages/public/ResetPassword";
 import Dashboard from "@/pages/member/Dashboard";
 import Books from "@/pages/member/Books";
 import Borrows from "./pages/member/Borrows";
@@ -55,6 +58,9 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<AuthPage />} />
         <Route path="/about" element={<About />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         
         
 

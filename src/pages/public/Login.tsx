@@ -12,7 +12,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Loader2, Library, LogIn, UserPlus, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-//import { toast } from "sonner";
+import { toast } from "sonner";
+import api from "@/lib/api";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -86,6 +87,7 @@ const onRegister = async (data: RegisterForm) => {
 
     // Only switch tab and reset form if registration was successful
     if (result.success) {
+      toast.success("Registration successful! Please check your email to verify your account.");
       setActiveTab("login");
       registerForm.reset();
     }
@@ -225,6 +227,36 @@ const onRegister = async (data: RegisterForm) => {
                       "Sign In"
                     )}
                   </Button>
+                  { /* After the Sign In button */ }
+<div className="text-center text-sm mt-4">
+  <button
+    type="button"
+    onClick={async () => {
+      const email = loginForm.getValues("email");
+      if (!email || !z.string().email().safeParse(email).success) {
+        // toast.error("Please enter a valid email first");
+        return;
+      }
+
+      try {
+        const res = await api.post("/users/resend-verification", { email });
+        if (res.data.success) {
+          // toast.success("Verification email resent! Check your inbox.");
+        }
+      } catch (err: any) {
+        // toast.error(err.response?.data?.message || "Could not resend email");
+      }
+    }}
+    className="text-emerald-600 hover:underline"
+  >
+    Didn't receive verification email? Resend
+  </button>
+</div>
+                  <p className="text-center text-sm mt-6">
+  <Link to="/forgot-password" className="text-emerald-600 hover:underline">
+    Forgot password?
+  </Link>
+</p>
                 </form>
               </Form>
             </TabsContent>

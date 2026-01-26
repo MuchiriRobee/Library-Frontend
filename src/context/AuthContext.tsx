@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (res.data.success) {
-        toast.success("Account created successfully! Please sign in.");
+        //toast.success("Account created successfully! Please sign in.");
         return { success: true };
       } else {
         toast.error(res.data.message || "Registration failed");
